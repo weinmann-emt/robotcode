@@ -539,6 +539,20 @@ export class DebugManager {
 
     if (profiles) testLaunchConfig.profiles = profiles;
 
+    // Automatically close the integrated terminal after the test run is finished
+    // This should fix an issue with Git Bash as default terminal in windows where
+    // the communication between vscode and the terminal is not working properly and sometimes some characters
+    // are lost in the beginning of the command that is send to the terminal
+    // A similar issue was noted here: https://stackoverflow.com/questions/58194880/in-vscode-python-debugger-launches-a-new-terminal-every-time-i-debug/58194881#58194881
+    const terminal = "console" in testLaunchConfig
+                ? testLaunchConfig.console
+                : config.get("debug.defaultConsole", "integratedTerminal");
+    if (terminal == "integratedTerminal") {
+      args.push("\n")
+      args.push("exit")
+      args.push("0")
+    }
+
     return vscode.debug.startDebugging(
       folder,
       {
